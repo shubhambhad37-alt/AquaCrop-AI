@@ -1,3 +1,14 @@
+# 🌱 AquaCrop AI
+
+AI-ML Based Agricultural Water Footprint Prediction & Sustainable Crop Recommendation System
+
+## 🚀 Live Demo
+
+[![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-AquaCrop_AI-success?style=for-the-badge)](https://aqua-crop-ai--shubhambhad37.replit.app/)
+
+## 📂 Source Code
+
+This repository contains the source code for the AquaCrop AI project.
 # AquaCrop AI
 
 ## Abstract
