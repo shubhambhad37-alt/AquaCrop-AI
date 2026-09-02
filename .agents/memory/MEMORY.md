@@ -1,0 +1,1 @@
+- [OpenAPI and Zod compatibility](openapi-zod-compatibility.md) — use numeric schemas with this generator unless integer-specific validation is essential.

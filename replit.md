@@ -1,15 +1,16 @@
-# [Project name]
+# AquaCrop AI
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A model-driven agricultural water-intelligence workspace for estimating, explaining, comparing, and simulating crop water footprints.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/api-server run dev` — run the API server
+- `pnpm --filter @workspace/aquacrop-ai run dev` — run the AquaCrop AI web app
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- Optional env: `AQUACROP_LOW_THRESHOLD`, `AQUACROP_MEDIUM_THRESHOLD` — configurable educational category thresholds
 
 ## Stack
 
@@ -22,23 +23,33 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/api-server/src/lib/aquacrop.ts` — deterministic demo dataset, preprocessing, model training, evaluation, prediction, and explanation logic
+- `artifacts/api-server/src/routes/aqua.ts` — AquaCrop API routes and in-memory prediction history
+- `artifacts/aquacrop-ai/src/pages/` — dashboard, prediction, comparison, simulator, recommendation, performance, history, and methodology screens
+- `lib/api-spec/openapi.yaml` — source-of-truth API contract
+- `docs/` — academic documentation and viva preparation
+- `README.md` — setup, architecture, methodology, and limitations
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- The demo dataset is generated deterministically at API startup so displayed KPIs and predictions are reproducible and never silently presented as real measurements.
+- Model selection is based on held-out RMSE across Linear Regression, Decision Tree, and Random Forest candidates; the selected model drives both predictions and feature importance.
+- The workspace keeps the existing Express service and generated OpenAPI client as the runtime boundary, with a TypeScript-compatible in-process ML implementation so Replit can run the demo without a separate Python runtime.
+- Blue/green/grey water is explicitly marked unsupported until the data contains enough field and pollution information to calculate the components defensibly.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+Users can inspect actual dataset/model KPIs, submit growing conditions for an explained L/kg estimate, compare crop footprint ranges, run model-based what-if scenarios, rank crops by predicted water efficiency, review performance metrics, and save/clear prediction history.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+_No persistent user preferences recorded._
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- The demo data is synthetic; do not describe its values as authoritative agricultural measurements.
+- The API service must be restarted after backend model or route changes because its workflow runs a built bundle.
+- API units are L/kg throughout the product. The UI and documentation intentionally avoid m³/t.
 
 ## Pointers
 

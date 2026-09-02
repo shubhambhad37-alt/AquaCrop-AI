@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "AquaCrop AI"
+description = "An AI-powered agricultural water intelligence platform that estimates crop water footprints, explains model predictions, simulates conservation scenarios, compares crops, recommends water-efficient options, and documents the underlying machine-learning workflow."
+version = "1.0.0"
+id = "artifacts/aquacrop-ai"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25605
+
+[services.development]
+run = "pnpm --filter @workspace/aquacrop-ai run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/aquacrop-ai", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/aquacrop-ai/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25605"
+BASE_PATH = "/"

@@ -3,13 +3,15 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: AquaCrop AI water-footprint intelligence API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: aqua
+    description: AquaCrop AI analytics and prediction operations
 paths:
   /healthz:
     get:
@@ -24,6 +26,198 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /crops:
+    get:
+      operationId: listCrops
+      tags: [aqua]
+      summary: List crops available in the dataset
+      responses:
+        "200":
+          description: Dataset crops
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CropSummary"
+  /states:
+    get:
+      operationId: listStates
+      tags: [aqua]
+      summary: List regions available in the dataset
+      responses:
+        "200":
+          description: Dataset regions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [aqua]
+      summary: Get dashboard dataset and model summary
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dashboard"
+  /model-performance:
+    get:
+      operationId: getModelPerformance
+      tags: [aqua]
+      summary: Get actual model evaluation metrics
+      responses:
+        "200":
+          description: Model metrics and validation data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModelPerformance"
+  /feature-importance:
+    get:
+      operationId: getFeatureImportance
+      tags: [aqua]
+      summary: Get model-derived feature importance values
+      responses:
+        "200":
+          description: Feature importance
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FeatureImportance"
+  /crop-footprints:
+    get:
+      operationId: getCropFootprints
+      tags: [aqua]
+      summary: Get observed dataset footprint summaries by crop
+      responses:
+        "200":
+          description: Crop footprint summaries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CropFootprint"
+  /predict:
+    post:
+      operationId: predictWaterFootprint
+      tags: [aqua]
+      summary: Predict water footprint for agricultural conditions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PredictionInput"
+      responses:
+        "200":
+          description: Model prediction and explanation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PredictionResult"
+        "400":
+          description: Invalid agricultural inputs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /simulate:
+    post:
+      operationId: simulateScenario
+      tags: [aqua]
+      summary: Compare two model-based agricultural scenarios
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SimulationInput"
+      responses:
+        "200":
+          description: Scenario comparison
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SimulationResult"
+        "400":
+          description: Invalid scenario inputs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /recommend:
+    post:
+      operationId: recommendCrops
+      tags: [aqua]
+      summary: Rank available crops by predicted water efficiency
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecommendationInput"
+      responses:
+        "200":
+          description: Water-efficiency crop ranking
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Recommendation"
+        "400":
+          description: Invalid recommendation inputs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /history:
+    get:
+      operationId: getHistory
+      tags: [aqua]
+      summary: Get recent prediction history
+      responses:
+        "200":
+          description: Prediction history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HistoryItem"
+    post:
+      operationId: saveHistory
+      tags: [aqua]
+      summary: Save a prediction to history
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HistoryInput"
+      responses:
+        "201":
+          description: Saved history item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HistoryItem"
+    delete:
+      operationId: clearHistory
+      tags: [aqua]
+      summary: Clear prediction history
+      responses:
+        "204":
+          description: History cleared
 components:
   schemas:
     HealthStatus:
@@ -33,4 +227,246 @@ components:
           type: string
       required:
         - status
+    CropSummary:
+      type: object
+      required: [name, averageFootprint, observations]
+      properties:
+        name:
+          type: string
+        averageFootprint:
+          type: number
+        observations:
+          type: number
+    CropFootprint:
+      type: object
+      required: [crop, averageFootprint, minFootprint, maxFootprint, observations]
+      properties:
+        crop:
+          type: string
+        averageFootprint:
+          type: number
+        minFootprint:
+          type: number
+        maxFootprint:
+          type: number
+        observations:
+          type: number
+    ModelMetric:
+      type: object
+      required: [model, mae, rmse, r2, trainingTimeMs]
+      properties:
+        model:
+          type: string
+        mae:
+          type: number
+        rmse:
+          type: number
+        r2:
+          type: number
+        trainingTimeMs:
+          type: number
+    Dashboard:
+      type: object
+      required: [dataset, kpis, cropFootprints, model]
+      properties:
+        dataset:
+          type: object
+          required: [name, source, isSynthetic, rows, target, methodologyNote]
+          properties:
+            name:
+              type: string
+            source:
+              type: string
+            isSynthetic:
+              type: boolean
+            rows:
+              type: number
+            target:
+              type: string
+            methodologyNote:
+              type: string
+        kpis:
+          type: object
+          required: [cropsAnalyzed, averageFootprint, lowestFootprint, highestFootprint, bestModel, modelR2]
+          properties:
+            cropsAnalyzed:
+              type: number
+            averageFootprint:
+              type: number
+            lowestFootprint:
+              type: number
+            highestFootprint:
+              type: number
+            bestModel:
+              type: string
+            modelR2:
+              type: number
+        cropFootprints:
+          type: array
+          items:
+            $ref: "#/components/schemas/CropFootprint"
+        model:
+          $ref: "#/components/schemas/ModelMetric"
+    FeatureImportance:
+      type: object
+      required: [feature, importance, label, explanation]
+      properties:
+        feature:
+          type: string
+        importance:
+          type: number
+        label:
+          type: string
+        explanation:
+          type: string
+    ModelPerformance:
+      type: object
+      required: [models, bestModel, validationMethod, actualVsPredicted]
+      properties:
+        models:
+          type: array
+          items:
+            $ref: "#/components/schemas/ModelMetric"
+        bestModel:
+          type: string
+        validationMethod:
+          type: string
+        actualVsPredicted:
+          type: array
+          items:
+            type: object
+            required: [actual, predicted]
+            properties:
+              actual:
+                type: number
+              predicted:
+                type: number
+    PredictionInput:
+      type: object
+      required: [crop, temperature, rainfall, cultivatedArea, productionQuantity, irrigationWater, irrigationType, soilType, growingDuration]
+      properties:
+        crop:
+          type: string
+          minLength: 1
+        state:
+          type: ["string", "null"]
+        temperature:
+          type: number
+        rainfall:
+          type: number
+        cultivatedArea:
+          type: number
+        productionQuantity:
+          type: number
+        irrigationWater:
+          type: number
+        irrigationType:
+          type: string
+        soilType:
+          type: string
+        growingDuration:
+          type: number
+    PredictionResult:
+      type: object
+      required: [prediction, category, model, explanation, componentsSupported, methodologyNote, inputs]
+      properties:
+        prediction:
+          type: number
+        category:
+          type: string
+          enum: [LOW, MEDIUM, HIGH]
+        model:
+          type: string
+        explanation:
+          type: array
+          items:
+            $ref: "#/components/schemas/FeatureImportance"
+        componentsSupported:
+          type: boolean
+        methodologyNote:
+          type: string
+        inputs:
+          $ref: "#/components/schemas/PredictionInput"
+    SimulationInput:
+      type: object
+      required: [current, modified]
+      properties:
+        current:
+          $ref: "#/components/schemas/PredictionInput"
+        modified:
+          $ref: "#/components/schemas/PredictionInput"
+    SimulationResult:
+      type: object
+      required: [current, modified, difference, percentChange, estimatedSaving, note]
+      properties:
+        current:
+          $ref: "#/components/schemas/PredictionResult"
+        modified:
+          $ref: "#/components/schemas/PredictionResult"
+        difference:
+          type: number
+        percentChange:
+          type: number
+        estimatedSaving:
+          type: number
+        note:
+          type: string
+    RecommendationInput:
+      allOf:
+        - $ref: "#/components/schemas/PredictionInput"
+    Recommendation:
+      type: object
+      required: [rank, crop, prediction, category, rationale]
+      properties:
+        rank:
+          type: number
+        crop:
+          type: string
+        prediction:
+          type: number
+        category:
+          type: string
+          enum: [LOW, MEDIUM, HIGH]
+        rationale:
+          type: string
+    HistoryInput:
+      type: object
+      required: [crop, prediction, category, scenarioType, inputs]
+      properties:
+        crop:
+          type: string
+        prediction:
+          type: number
+        category:
+          type: string
+        scenarioType:
+          type: string
+        inputs:
+          type: object
+          additionalProperties: true
+    HistoryItem:
+      type: object
+      required: [id, timestamp, crop, prediction, category, scenarioType, inputs]
+      properties:
+        id:
+          type: number
+        timestamp:
+          type: string
+        crop:
+          type: string
+        prediction:
+          type: number
+        category:
+          type: string
+        scenarioType:
+          type: string
+        inputs:
+          type: object
+          additionalProperties: true
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
 

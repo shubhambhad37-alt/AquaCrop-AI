@@ -1,0 +1,21 @@
+import { useMemo, useState } from 'react';
+import { CheckCircle2, ChevronDown, Trash2 } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useClearHistory, useGetHistory, getGetHistoryQueryKey } from '@workspace/api-client-react';
+import { AquaShell, Button, Card, CategoryBadge, EmptyBlock, ErrorBlock, LoadingBlock, PageIntro, SectionLabel, fmt } from '@/components/aqua-shell';
+
+export default function History() {
+  const query = useGetHistory();
+  const clear = useClearHistory();
+  const queryClient = useQueryClient();
+  const [expanded, setExpanded] = useState<number | null>(null);
+  const items = useMemo(() => query.data ?? [], [query.data]);
+  const clearAll = () => {
+    if (!window.confirm('Clear every saved scenario from history?')) return;
+    clear.mutate(undefined, { onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetHistoryQueryKey() }) });
+  };
+  return <AquaShell><PageIntro eyebrow="Record / 07" title="Keep the trail." description="Saved predictions preserve the scenario around an estimate, so future comparisons start with context rather than memory." action={items.length > 0 ? <Button variant="danger" onClick={clearAll} disabled={clear.isPending} data-testid="button-clear-history"><Trash2 size={14} />{clear.isPending ? 'Clearing…' : 'Clear history'}</Button> : undefined} />
+    {query.isLoading ? <LoadingBlock rows={5} /> : query.isError ? <ErrorBlock onRetry={() => query.refetch()} /> : items.length === 0 ? <EmptyBlock title="Your record is clear" body="Save a prediction from the estimate view and it will appear here with its assumptions intact." /> : <Card className="overflow-hidden"><div className="border-b border-border bg-muted/25 px-6 py-4"><SectionLabel aside={<span className="font-data">{items.length} saved</span>}>Recent scenarios</SectionLabel></div><div>{items.map((item, index) => <div key={item.id} data-testid={`row-history-${item.id}`} className="border-b border-border/70 last:border-0"><button onClick={() => setExpanded(expanded === item.id ? null : item.id)} data-testid={`button-expand-history-${item.id}`} className="grid w-full grid-cols-[1fr_auto] items-center gap-4 px-5 py-5 text-left transition-colors hover:bg-muted/25 sm:grid-cols-[1fr_1fr_auto_auto] sm:px-6"><div><div className="flex items-center gap-2"><span className="text-sm font-extrabold">{item.crop}</span><CategoryBadge category={item.category} /></div><p className="mt-1 text-[11px] text-muted-foreground">{item.scenarioType} · {new Date(item.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</p></div><div className="hidden text-left sm:block"><p className="font-data text-sm text-primary">{fmt(item.prediction)} L/kg</p><p className="mt-1 text-[10px] text-muted-foreground">predicted footprint</p></div><div className="hidden items-center gap-1 text-[11px] text-primary sm:flex"><CheckCircle2 size={14} /> saved</div><ChevronDown size={16} className={`justify-self-end text-muted-foreground transition-transform ${expanded === item.id ? 'rotate-180' : ''}`} /></button>{expanded === item.id && <div className="grid gap-4 bg-muted/20 px-5 pb-5 pt-1 sm:grid-cols-2 sm:px-6"><div><p className="font-data text-[10px] uppercase tracking-wider text-muted-foreground">Estimate</p><p className="mt-1 font-display text-2xl text-primary">{fmt(item.prediction)} <small className="font-sans text-xs text-muted-foreground">L/kg</small></p></div><div><p className="font-data text-[10px] uppercase tracking-wider text-muted-foreground">Inputs captured</p><div className="mt-2 flex flex-wrap gap-2">{Object.entries(item.inputs ?? {}).slice(0, 8).map(([key, value]) => <span key={key} className="rounded-md border border-border bg-card px-2 py-1 text-[10px] text-muted-foreground">{key}: <strong className="text-foreground">{String(value)}</strong></span>)}</div></div></div>}</div>)}</div></Card>}
+    {clear.isError && <p className="mt-3 text-xs text-destructive" data-testid="status-clear-error">History could not be cleared. Try again.</p>}
+  </AquaShell>;
+}
